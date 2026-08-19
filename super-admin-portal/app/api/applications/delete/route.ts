@@ -1,0 +1,3 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+export async function DELETE(request: NextRequest) { const id = new URL(request.url).searchParams.get('id'); const key = process.env.SUPABASE_SERVICE_ROLE_KEY; if (!id || !key) return NextResponse.json({ error: 'Application ID or service key is missing.' }, { status: 400 }); const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { autoRefreshToken: false, persistSession: false } }); const { error } = await admin.from('student_applications').delete().eq('id', id); return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ success: true }); }

@@ -1,0 +1,8 @@
+import Link from 'next/link';
+import { ArrowRight, BarChart3 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+
+export default async function CoursesPage() {
+  const supabase = await createClient(); const { data: courses } = await supabase.from('courses').select('id,title,slug,description,level,lessons(id)').eq('published', true).order('created_at');
+  return <main className="min-h-screen bg-[#07111f] px-6 py-12 text-white lg:px-8"><div className="mx-auto max-w-7xl"><Link href="/" className="text-sm text-amber-400">← Krish FX Swing Lab</Link><div className="mt-12 max-w-2xl"><p className="text-sm font-semibold uppercase tracking-[.2em] text-amber-400">The learning lab</p><h1 className="mt-3 text-4xl font-bold sm:text-5xl">All courses</h1><p className="mt-4 leading-7 text-slate-400">Follow a structured path from market foundations to advanced trade execution.</p></div><div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{(courses ?? []).map((course) => <Link key={course.id} href={`/courses/${course.slug}`} className="group rounded-2xl border border-white/10 bg-white/[.04] p-6 transition hover:-translate-y-1 hover:border-amber-400/50"><div className="flex items-center justify-between"><span className="rounded-full bg-amber-400/10 px-3 py-1 text-xs text-amber-300">{course.level}</span><BarChart3 className="size-5 text-slate-500" /></div><h2 className="mt-6 text-xl font-semibold">{course.title}</h2><p className="mt-3 min-h-14 text-sm leading-6 text-slate-400">{course.description}</p><p className="mt-6 text-sm text-amber-400">{course.lessons?.length ?? 0} lessons <ArrowRight className="ml-1 inline size-4 transition group-hover:translate-x-1" /></p></Link>)}</div></div></main>;
+}

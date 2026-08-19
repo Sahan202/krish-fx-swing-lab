@@ -1,0 +1,12 @@
+@import "tailwindcss";
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at 15% 0%, #132844 0, #070d19 38rem, #03060c 80rem); color: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.bg-white { background-color: #101a2b !important; }
+.bg-\[\#f8fbff\] { background: transparent !important; }
+.text-\[\#09213f\] { color: #f8fafc !important; }
+.text-slate-500, .text-slate-600 { color: #94a3b8 !important; }
+.border-blue-100, .border-blue-200 { border-color: #243b5a !important; }
+input { background: #0c1626; color: #f8fafc; border-color: #294568; }
+input::placeholder { color: #7185a0; }
+a { transition: transform .2s ease, opacity .2s ease; }
+a:hover { opacity: .9; }

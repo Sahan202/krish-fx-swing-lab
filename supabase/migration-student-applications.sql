@@ -1,0 +1,2 @@
+create table if not exists public.student_applications (id uuid primary key default gen_random_uuid(), full_name text not null, email text not null unique, whatsapp_number text not null, badge integer not null check (badge in (1,2)), status text not null default 'pending' check (status in ('pending','approved','rejected')), created_at timestamptz not null default now());
+alter table public.student_applications enable row level security;

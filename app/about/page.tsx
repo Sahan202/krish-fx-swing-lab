@@ -1,0 +1,3 @@
+import Link from 'next/link';
+
+export default function AboutPage() { return <main className="min-h-screen bg-[#07111f] px-6 py-16 text-white"><div className="mx-auto max-w-3xl"><Link href="/" className="text-sm text-amber-400">← Krish FX Swing Lab</Link><p className="mt-20 text-sm font-semibold uppercase tracking-[.2em] text-amber-400">About the lab</p><h1 className="mt-4 text-5xl font-bold">Learn the market with a system.</h1><p className="mt-7 text-lg leading-8 text-slate-300">Krish FX Swing Lab is a structured learning space for traders who want to understand market structure, risk management, and disciplined execution.</p></div></main>; }
