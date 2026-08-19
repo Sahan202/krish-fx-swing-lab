@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import crypto from 'node:crypto';
+export async function POST() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 }); const sessionId = crypto.randomUUID(); const { error } = await supabase.from('active_sessions').upsert({ user_id: user.id, session_id: sessionId, updated_at: new Date().toISOString() }); if (error) return NextResponse.json({ error: error.message }, { status: 500 }); const response = NextResponse.json({ ok: true }); response.cookies.set('krish_session_id', sessionId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 2592000 }); return response; }
