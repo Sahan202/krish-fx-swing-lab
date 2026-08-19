@@ -9,5 +9,9 @@ export async function DELETE(request: NextRequest) {
 
   const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
   const { error } = await admin.auth.admin.deleteUser(id);
-  return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true });
+  if (error) {
+    console.error('Student delete failed:', error.message, error.status, error.code);
+    return NextResponse.json({ error: error.message || 'Supabase could not delete this account.' }, { status: error.status && error.status >= 500 ? 500 : 400 });
+  }
+  return NextResponse.json({ ok: true });
 }
