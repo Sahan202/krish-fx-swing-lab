@@ -7,6 +7,11 @@ export function serviceClient() {
   if (!url || !key) throw new Error('Portal server configuration is missing.');
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
+export async function requireAuthenticatedUser(request: NextRequest): Promise<AdminActor | null> {
+  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, ''); if (!token) return null;
+  const { data: auth } = await serviceClient().auth.getUser(token); if (!auth.user) return null;
+  return { id: auth.user.id, email: auth.user.email ?? null };
+}
 export async function requireAdmin(request: NextRequest): Promise<AdminActor | null> {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, ''); if (!token) return null;
   const admin = serviceClient(); const { data: auth } = await admin.auth.getUser(token); if (!auth.user) return null;
