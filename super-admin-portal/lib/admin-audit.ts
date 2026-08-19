@@ -20,7 +20,7 @@ export async function requireAdmin(request: NextRequest): Promise<AdminActor | n
 }
 export async function audit(actor: AdminActor, action: string, targetType: string, targetId?: string, details: Record<string, unknown> = {}) {
   const client = serviceClient();
-  const row = { actor_id: actor.id, actor_email: actor.email, action, target_type: targetType, target_id: targetId ?? null, details };
+  const row = { actor_id: actor.id, actor_email: actor.email, actor_role: 'admin', action, target_type: targetType, target_id: targetId ?? null, details };
   const { error } = await client.from('admin_audit_logs').insert(row);
   // Older projects may not have a matching public.profiles row for the portal user.
   // Keep the event (and the original auth ID) instead of losing the audit entry.
