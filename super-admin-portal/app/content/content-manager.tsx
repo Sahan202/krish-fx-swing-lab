@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
+import { supabaseBrowser } from '../../lib/supabase';
 type Course={id:string;title:string}; type Lesson={id:string;title:string;description:string|null;vdocipher_video_id:string|null;lesson_order:number};
 export default function ContentManager({courses,lessons}:{courses:Course[];lessons:Lesson[]}) {
  const [items,setItems]=useState(lessons); const [form,setForm]=useState({courseId:courses[0]?.id??'',title:'',description:'',videoId:'',order:String(items.length+1)}); const [message,setMessage]=useState('');
- const api=async(method:string,body:unknown)=>{const r=await fetch('/api/content/lessons',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);return d};
+ const api=async(method:string,body:unknown)=>{const { data:{session} }=await supabaseBrowser().auth.getSession();const r=await fetch('/api/content/lessons',{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error);return d};
  async function add(e:React.FormEvent){e.preventDefault();try{const d=await api('POST',form);setItems([...items,d.lesson]);setForm({...form,title:'',description:'',videoId:'',order:String(items.length+2)});setMessage('Lesson added.')}catch(e){setMessage(e instanceof Error?e.message:'Error');}}
  async function save(item:Lesson){try{await api('PATCH',{id:item.id,title:item.title,description:item.description,videoId:item.vdocipher_video_id,order:item.lesson_order});setMessage('Changes saved.')}catch(e){setMessage(e instanceof Error?e.message:'Error');}}
  async function remove(id:string){if(!confirm('Delete this lesson permanently?'))return;try{await api('DELETE',{id});setItems(items.filter(x=>x.id!==id));setMessage('Lesson deleted.')}catch(e){setMessage(e instanceof Error?e.message:'Error');}}
