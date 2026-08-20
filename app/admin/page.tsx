@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminLessons from '@/components/admin/admin-lessons';
-import StudentManager from '@/components/admin/student-manager';
 import Link from 'next/link';
 
 type Lesson = { id: string; title: string; vdocipher_video_id: string | null; course_id: string; courses: { title: string }[] | null };

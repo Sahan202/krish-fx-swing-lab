@@ -10,4 +10,15 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ['/dashboard/:path*', '/profile/:path*', '/courses/:path*', '/admin/:path*'] };
+export const config = {
+  matcher: [
+    '/dashboard/:path*',
+    '/profile/:path*',
+    '/courses/:path*',
+    '/admin/:path*',
+    '/api/vdocipher/:path*',
+    '/api/videos/:path*',
+    '/api/audit/:path*',
+    '/api/admin/:path*',
+  ],
+};

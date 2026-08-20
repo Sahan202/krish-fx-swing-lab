@@ -1,6 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getActiveSession } from '@/lib/supabase/active-session';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const activeSession = await getActiveSession(request);
+  if (!activeSession) return NextResponse.json({ error: 'Your session is no longer active. Please sign in again.' }, { status: 401 });
+  const { supabase, user } = activeSession;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!['instructor', 'admin', 'super_admin'].includes(profile?.role ?? '')) {
+    return NextResponse.json({ error: 'Staff access is required.' }, { status: 403 });
+  }
+
   const token = process.env.VIMEO_ACCESS_TOKEN;
   const userId = process.env.VIMEO_USER_ID;
 

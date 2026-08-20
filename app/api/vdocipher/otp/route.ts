@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getActiveSession } from '@/lib/supabase/active-session';
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const activeSession = await getActiveSession(request);
+  if (!activeSession) return NextResponse.json({ error: 'Your session is no longer active. Please sign in again.' }, { status: 401 });
+  const { supabase, user } = activeSession;
   const { videoId } = await request.json() as { videoId?: string };
   if (!videoId || !/^[a-zA-Z0-9_-]+$/.test(videoId)) return NextResponse.json({ error: 'A valid VdoCipher video ID is required.' }, { status: 400 });
   const { data: profile } = await supabase.from('profiles').select('role,approval_status').eq('id', user.id).maybeSingle();
   const staff = ['instructor', 'admin', 'super_admin'].includes(profile?.role ?? '');
   const { data: lesson } = await supabase.from('lessons').select('course_id,courses!inner(published)').eq('vdocipher_video_id', videoId).maybeSingle();
-  if (!lesson || !lesson.courses?.published) return NextResponse.json({ error: 'Video is not available.' }, { status: 404 });
+  const course = Array.isArray(lesson?.courses) ? lesson.courses[0] : lesson?.courses;
+  if (!lesson || !course?.published) return NextResponse.json({ error: 'Video is not available.' }, { status: 404 });
   if (!staff) {
     if (profile?.approval_status !== 'approved') return NextResponse.json({ error: 'Your account is not approved.' }, { status: 403 });
     const { data: enrollment } = await supabase.from('enrollments').select('id').eq('student_id', user.id).eq('course_id', lesson.course_id).maybeSingle();
