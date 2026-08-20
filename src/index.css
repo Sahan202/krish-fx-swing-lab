@@ -334,3 +334,8 @@ article:hover { box-shadow: 0 18px 42px rgb(0 184 254 / 0.14); }
 .theme-dark .text-amber-400, .theme-dark .text-amber-300, .theme-dark .text-amber-200 { color: #62c8ff !important; }
 .theme-dark .text-cyan-200, .theme-dark .text-cyan-300, .theme-dark .text-cyan-400 { color: #7dd3fc !important; }
 .theme-dark .bg-amber-400 { background-color: #00b8fe !important; color: #ffffff !important; }
+
+/* Keep the login brand panel readable even when the light theme overrides utility text colors. */
+section[class*="linear-gradient(145deg"] { color: #ffffff !important; }
+section[class*="linear-gradient(145deg"] h1,
+section[class*="linear-gradient(145deg"] p { color: #ffffff !important; }
