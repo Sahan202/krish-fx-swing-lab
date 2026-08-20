@@ -45,7 +45,9 @@ select option { background: #081322; color: #e2e8f0; }
 .admin-workspace table thead { background: rgba(7,21,39,.75); }
 .admin-workspace table tbody tr { transition: background .18s ease; }
 .admin-workspace table tbody tr:hover { background: rgba(34,211,238,.045); }
-.admin-action-select { appearance: none; min-width: 190px; background: linear-gradient(135deg, rgba(12,33,58,.96), rgba(9,22,42,.96)) !important; border-color: rgba(103,232,249,.35) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 26px rgba(0,0,0,.18) !important; }
-.admin-action-select:hover:not(:disabled) { border-color: rgba(103,232,249,.7) !important; }
-.admin-action-select:focus { box-shadow: 0 0 0 3px rgba(34,211,238,.14), 0 12px 30px rgba(0,0,0,.22) !important; }
+.admin-approval-control { min-width: 244px; }
+.admin-approval-label { display: block; margin: 0 0 6px 4px; color: #8faac9; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.admin-action-select { appearance: none; min-width: 244px; background: linear-gradient(135deg, rgba(15,45,77,.98), rgba(7,22,42,.98)) !important; border-color: rgba(103,232,249,.42) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 30px rgba(0,0,0,.23) !important; }
+.admin-action-select:hover:not(:disabled) { border-color: rgba(103,232,249,.85) !important; background: linear-gradient(135deg, rgba(18,55,91,.98), rgba(8,27,50,.98)) !important; }
+.admin-action-select:focus { box-shadow: 0 0 0 3px rgba(34,211,238,.16), 0 14px 34px rgba(0,0,0,.27) !important; }
 @media (max-width: 1023px) { .admin-sidebar::after { top: auto; bottom: -1px; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(34,211,238,.35), transparent); } }
