@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import nodemailer from 'nodemailer';
 import { audit, requirePermission } from '@/lib/admin-audit';
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
+}
 
 export async function PATCH(request: NextRequest) {
   const body = await request.json() as { id?: string; action?: 'approve' | 'reject' };
@@ -23,6 +26,13 @@ export async function PATCH(request: NextRequest) {
   await admin.from('student_applications').update({ status: 'approved' }).eq('id', body.id);
   await audit(actor, 'APPLICATION_APPROVED', 'student_application', body.id, { email: application.email, fullName: application.full_name, studentId: userId, badge: application.badge });
   let emailWarning = '';
-  try { const host = process.env.SMTP_HOST; const user = process.env.SMTP_USER; const pass = process.env.SMTP_PASS; const from = process.env.MAIL_FROM ?? user; if (!host || !user || !pass || !from) throw new Error('SMTP is not configured.'); const port = Number(process.env.SMTP_PORT ?? 465); const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } }); await transporter.sendMail({ from, to: application.email, subject: 'Your Krish FX Swing Lab account is approved', html: `<h2>Welcome to Krish FX Swing Lab</h2><p>Your application has been approved.</p><p><a href="${process.env.MAIN_SITE_URL ?? 'http://localhost:3000'}/login">Open student login</a></p><p>Email: ${application.email}<br/>Temporary password: <strong>${password}</strong></p>` }); } catch (error) { console.error('Approval email failed', error); emailWarning = `Account approved, but SMTP email could not be sent: ${error instanceof Error ? error.message : 'unknown error'}`; }
+  try {
+    const resendKey = process.env.RESEND_API_KEY; const from = process.env.RESEND_FROM_EMAIL;
+    if (!resendKey || !from) throw new Error('Resend is not configured.');
+    const loginUrl = `${process.env.MAIN_SITE_URL ?? 'https://www.krishfxswinglab.com'}/login`;
+    const safeName = escapeHtml(application.full_name); const safeEmail = escapeHtml(application.email); const safePassword = escapeHtml(password);
+    const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Your Krish FX Swing Lab account is approved', text: `Welcome to Krish FX Swing Lab\n\nHi ${application.full_name},\n\nYour application has been approved.\n\nStudent login: ${loginUrl}\nEmail: ${application.email}\nTemporary password: ${password}\n\nFor security, please change this password after you sign in.`, html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Your learning access is approved</h2><p>Hi ${safeName},</p><p>Your application has been approved. Use the details below to sign in.</p><p><a href="${loginUrl}" style="display:inline-block;background:#00b8fe;color:#fff;padding:13px 18px;border-radius:8px;font-weight:700;text-decoration:none">Open student login</a></p><div style="background:#f1f5f9;padding:16px;border-radius:10px"><strong>Email:</strong> ${safeEmail}<br/><strong>Temporary password:</strong> ${safePassword}</div><p style="color:#64748b;font-size:13px">For security, please change this password after you sign in.</p></main>` }) });
+    if (!response.ok) { const details = await response.text(); throw new Error(`Resend rejected the email (${response.status}): ${details}`); }
+  } catch (error) { console.error('Approval email failed', error); emailWarning = `Account approved, but email could not be sent: ${error instanceof Error ? error.message : 'unknown error'}`; }
   return NextResponse.json({ status: 'approved', temporaryPassword: password, emailWarning });
 }
