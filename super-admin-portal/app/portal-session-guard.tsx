@@ -10,7 +10,7 @@ export default function PortalSessionGuard({ children }: { children: React.React
     const client = supabaseBrowser(); const { data: { user } } = await client.auth.getUser();
     if (!user) { router.replace('/login'); return; }
     const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    if (profile?.role !== 'admin') { await client.auth.signOut(); router.replace('/login'); return; }
+    if (!['admin', 'super_admin'].includes(profile?.role ?? '')) { await client.auth.signOut(); router.replace('/login'); return; }
     setReady(true);
   })(); }, [pathname, router]);
   if (!ready) return <main className="grid min-h-screen place-items-center text-sm text-slate-400">Checking secure Super Admin session…</main>;
