@@ -1,10 +1,7 @@
 import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { audit, requirePermission, serviceClient } from '@/lib/admin-audit';
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
-}
+import { brandedEmail } from '@/lib/branded-email';
 
 export async function POST(request: NextRequest) {
   const actor = await requirePermission(request, 'manage_students');
@@ -29,8 +26,6 @@ export async function POST(request: NextRequest) {
     const from = process.env.RESEND_FROM_EMAIL;
     if (!resendKey || !from) throw new Error('Resend is not configured.');
     const loginUrl = `${process.env.MAIN_SITE_URL ?? 'https://www.krishfxswinglab.com'}/login`;
-    const safeName = escapeHtml(student.full_name ?? 'Student');
-    const safePassword = escapeHtml(password);
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -39,7 +34,7 @@ export async function POST(request: NextRequest) {
         to: [email],
         subject: 'Your Krish FX Swing Lab password was reset',
         text: `Hi ${student.full_name ?? 'Student'},\n\nA Super Admin reset your Krish FX Swing Lab password.\n\nStudent login: ${loginUrl}\nEmail: ${email}\nNew temporary password: ${password}\n\nFor security, change this password after signing in.`,
-        html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Your password was reset</h2><p>Hi ${safeName},</p><p>A Super Admin created a new temporary password for your student account.</p><p><a href="${loginUrl}" style="display:inline-block;background:#00b8fe;color:#fff;padding:13px 18px;border-radius:8px;font-weight:700;text-decoration:none">Open student login</a></p><div style="background:#f1f5f9;padding:16px;border-radius:10px"><strong>Email:</strong> ${escapeHtml(email)}<br/><strong>New temporary password:</strong> ${safePassword}</div><p style="color:#64748b;font-size:13px">For security, change this password after you sign in.</p></main>`,
+        html: brandedEmail({ eyebrow: 'PASSWORD RESET', title: 'Your new password is ready', name: student.full_name ?? 'Student', message: 'A Super Admin created a new temporary password for your student account.', details: [{ label: 'Email', value: email }, { label: 'New temporary password', value: password }], noticeTitle: 'SECURITY NOTE', notice: 'Change this temporary password after you sign in.', actionUrl: loginUrl, actionLabel: 'Open student login' }),
       }),
     });
     if (!response.ok) throw new Error(`Resend rejected the email (${response.status}): ${await response.text()}`);

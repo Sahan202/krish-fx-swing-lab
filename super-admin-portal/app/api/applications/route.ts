@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { audit, requirePermission } from '@/lib/admin-audit';
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character] ?? character));
-}
+import { brandedEmail } from '@/lib/branded-email';
 
 export async function PATCH(request: NextRequest) {
   const body = await request.json() as { id?: string; action?: 'approve' | 'reject' };
@@ -22,8 +19,7 @@ export async function PATCH(request: NextRequest) {
     try {
       const resendKey = process.env.RESEND_API_KEY; const from = process.env.RESEND_FROM_EMAIL;
       if (!resendKey || !from) throw new Error('Resend is not configured.');
-      const safeName = escapeHtml(application.full_name);
-      const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Update on your Krish FX Swing Lab application', text: `Hi ${application.full_name},\n\nThank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.\n\nIf you need more information, please contact support.`, html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Application update</h2><p>Hi ${safeName},</p><p>Thank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.</p><p>If you need more information, please contact support.</p></main>` }) });
+      const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Update on your Krish FX Swing Lab application', text: `Hi ${application.full_name},\n\nThank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.\n\nIf you need more information, please contact support.`, html: brandedEmail({ eyebrow: 'APPLICATION UPDATE', title: 'An update on your application', name: application.full_name, message: 'Thank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.', noticeTitle: 'NEED MORE INFORMATION?', notice: 'Please contact support if you need help or further details.' }) }) });
       if (!response.ok) throw new Error(`Resend rejected the email (${response.status}): ${await response.text()}`);
     } catch (emailError) {
       console.error('Rejection email failed', emailError);
@@ -46,8 +42,7 @@ export async function PATCH(request: NextRequest) {
     const resendKey = process.env.RESEND_API_KEY; const from = process.env.RESEND_FROM_EMAIL;
     if (!resendKey || !from) throw new Error('Resend is not configured.');
     const loginUrl = `${process.env.MAIN_SITE_URL ?? 'https://www.krishfxswinglab.com'}/login`;
-    const safeName = escapeHtml(application.full_name); const safeEmail = escapeHtml(application.email); const safePassword = escapeHtml(password);
-    const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Your Krish FX Swing Lab account is approved', text: `Welcome to Krish FX Swing Lab\n\nHi ${application.full_name},\n\nYour application has been approved.\n\nStudent login: ${loginUrl}\nEmail: ${application.email}\nTemporary password: ${password}\n\nFor security, please change this password after you sign in.`, html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Your learning access is approved</h2><p>Hi ${safeName},</p><p>Your application has been approved. Use the details below to sign in.</p><p><a href="${loginUrl}" style="display:inline-block;background:#00b8fe;color:#fff;padding:13px 18px;border-radius:8px;font-weight:700;text-decoration:none">Open student login</a></p><div style="background:#f1f5f9;padding:16px;border-radius:10px"><strong>Email:</strong> ${safeEmail}<br/><strong>Temporary password:</strong> ${safePassword}</div><p style="color:#64748b;font-size:13px">For security, please change this password after you sign in.</p></main>` }) });
+    const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Your Krish FX Swing Lab account is approved', text: `Welcome to Krish FX Swing Lab\n\nHi ${application.full_name},\n\nYour application has been approved.\n\nStudent login: ${loginUrl}\nEmail: ${application.email}\nTemporary password: ${password}\n\nFor security, please change this password after you sign in.`, html: brandedEmail({ eyebrow: 'ACCESS APPROVED', title: 'Your learning access is ready', name: application.full_name, message: 'Your application has been approved. Use the secure details below to sign in to your learning space.', details: [{ label: 'Email', value: application.email }, { label: 'Temporary password', value: password }], noticeTitle: 'SECURITY NOTE', notice: 'Change this temporary password after you sign in.', actionUrl: loginUrl, actionLabel: 'Open student login' }) }) });
     if (!response.ok) { const details = await response.text(); throw new Error(`Resend rejected the email (${response.status}): ${details}`); }
   } catch (error) { console.error('Approval email failed', error); emailWarning = `Account approved, but email could not be sent: ${error instanceof Error ? error.message : 'unknown error'}`; }
   return NextResponse.json({ status: 'approved', temporaryPassword: password, emailWarning });
