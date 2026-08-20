@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
 
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const rateLimitSecret = process.env.SIGNUP_RATE_LIMIT_SALT;
+  // A separate salt is optional. The Turnstile secret is already server-only
+  // and provides a safe fallback for hashing rate-limit bucket keys.
+  const rateLimitSecret = process.env.SIGNUP_RATE_LIMIT_SALT || process.env.TURNSTILE_SECRET_KEY;
   if (!key || !url || !rateLimitSecret) return NextResponse.json({ error: 'Application security is not configured.' }, { status: 503 });
 
   const ip = getIp(request);
