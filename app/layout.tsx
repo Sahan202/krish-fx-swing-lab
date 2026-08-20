@@ -4,6 +4,7 @@ import '@/index.css';
 import SiteNav from '@/components/layout/site-nav';
 import ThemeToggle from '@/components/layout/theme-toggle';
 import SessionGuard from '@/components/layout/session-guard';
+import SiteChrome from '@/components/layout/site-chrome';
 
 export const metadata: Metadata = {
   title: 'Krish FX Swing Lab',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body><SessionGuard /><SiteNav />{children}<div className="fixed bottom-5 right-5 z-50"><ThemeToggle /></div></body>
+      <body><SessionGuard /><SiteChrome><SiteNav /><div className="fixed bottom-5 right-5 z-50"><ThemeToggle /></div></SiteChrome>{children}</body>
     </html>
   );
 }
