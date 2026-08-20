@@ -23,7 +23,8 @@ export async function requirePermission(request: NextRequest, permission: Permis
   const actor = await requireAdmin(request); if (!actor) return null;
   const client = serviceClient(); const { data: profile } = await client.from('profiles').select('role').eq('id', actor.id).maybeSingle();
   if (profile?.role === 'super_admin') return actor;
-  const { data: permissions } = await client.from('admin_permissions').select(permission).eq('user_id', actor.id).maybeSingle();
+  const { data } = await client.from('admin_permissions').select('manage_students,manage_content,manage_applications,view_reports').eq('user_id', actor.id).maybeSingle();
+  const permissions = data as Record<Permission, boolean> | null;
   return permissions?.[permission] ? actor : null;
 }
 export async function requireSuperAdmin(request: NextRequest): Promise<AdminActor | null> {
