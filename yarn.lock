@@ -1111,6 +1111,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nodemailer@npm:^8.0.1":
+  version: 8.0.1
+  resolution: "@types/nodemailer@npm:8.0.1"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/4370ac478a6811faaa64fcf769556515c72b78c66961cde22be75bb975ce8a964cfbe5e7c0988a99250f3250faa34357c73958b019b3c63dd138ea3784442032
+  languageName: node
+  linkType: hard
+
 "@types/react-dom@npm:^19.0.4":
   version: 19.1.1
   resolution: "@types/react-dom@npm:19.1.1"
@@ -2749,6 +2758,7 @@ __metadata:
     "@supabase/supabase-js": "npm:^2.49.8"
     "@tailwindcss/postcss": "npm:^4.1.1"
     "@types/node": "npm:^22.15.30"
+    "@types/nodemailer": "npm:^8.0.1"
     "@types/react": "npm:^19.0.10"
     "@types/react-dom": "npm:^19.0.4"
     class-variance-authority: "npm:^0.7.1"
@@ -2764,6 +2774,7 @@ __metadata:
     lint-staged: "npm:^15.5.0"
     lucide-react: "npm:^0.513.0"
     next: "npm:^15.5.4"
+    nodemailer: "npm:^9.0.5"
     prettier: "npm:^3.5.3"
     prettier-plugin-tailwindcss: "npm:^0.6.11"
     react: "npm:^19.0.0"
@@ -2832,6 +2843,13 @@ __metadata:
   bin:
     next: dist/bin/next
   checksum: 10c0/9adeaa0eadd0f9ef1b177fa80a8f31fd3759fb01cc45af12a3bf96ad5532de53fd868996f49bc9fdc26aa7d1332beb2b9deeafa494c060df1056befc1540b1b2
+  languageName: node
+  linkType: hard
+
+"nodemailer@npm:^9.0.5":
+  version: 9.0.5
+  resolution: "nodemailer@npm:9.0.5"
+  checksum: 10c0/60f7a21497c98c0d275cd12c488af581ef6aee65db575026319ac249dcac210bdab20edf77fe3158176ed3910f70d8c46d89abcd74f57a7170302727e6d05ee3
   languageName: node
   linkType: hard
 

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { recordSystemEvent } from '@/lib/audit';
@@ -38,6 +39,24 @@ async function verifyTurnstile(token: string, ip: string) {
   if (!response.ok) return { ok: false, configurationError: false };
   const result = await response.json() as { success?: boolean };
   return { ok: result.success === true, configurationError: false };
+}
+
+async function sendApplicationThankYou(email: string, fullName: string) {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.MAIL_FROM ?? user;
+  if (!host || !user || !pass || !from) throw new Error('SMTP is not configured.');
+  const port = Number(process.env.SMTP_PORT ?? 465);
+  const siteUrl = process.env.MAIN_SITE_URL ?? 'https://www.krishfxswinglab.com';
+  const transporter = nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
+  await transporter.sendMail({
+    from,
+    to: email,
+    subject: 'Thank you for applying to Krish FX Swing Lab',
+    text: `Hi ${fullName},\n\nThank you for applying to Krish FX Swing Lab. We received your application and it is now waiting for Super Admin approval.\n\nWe will email you again once your account access is ready.\n\n${siteUrl}`,
+    html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Thank you for applying</h2><p>Hi ${fullName.replace(/[&<>"']/g, '')},</p><p>We received your application. It is now waiting for Super Admin approval.</p><p>We will email you again once your account access is ready.</p><p><a href="${siteUrl}" style="display:inline-block;background:#00b8fe;color:#fff;padding:12px 16px;border-radius:8px;font-weight:700;text-decoration:none">Visit Krish FX Swing Lab</a></p></main>`,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -97,5 +116,8 @@ export async function POST(request: NextRequest) {
   }
 
   await recordSystemEvent({ action: 'STUDENT_APPLICATION_CREATED', targetType: 'student_application', targetId: data.id, email, role: 'applicant', details: { fullName, badge } });
-  return NextResponse.json({ success: true });
+  let emailWarning = '';
+  try { await sendApplicationThankYou(email, fullName); }
+  catch (emailError) { console.error('Application thank-you email failed', emailError); emailWarning = 'Application submitted, but the thank-you email could not be sent.'; }
+  return NextResponse.json({ success: true, emailWarning });
 }
