@@ -21,3 +21,13 @@ input { background: #0c1626; color: #f8fafc; border-color: #294568; }
 input::placeholder { color: #7185a0; }
 a { transition: transform .2s ease, opacity .2s ease; }
 a:hover { opacity: .9; }
+
+/* Shared Admin Studio treatment for every inner management component. */
+.bg-blue-500\/10, .bg-blue-500\/15 { background: linear-gradient(135deg, rgba(6,182,212,.12), rgba(14,116,144,.06)) !important; border-color: rgba(34,211,238,.22) !important; }
+.bg-blue-600 { background: linear-gradient(135deg, #22d3ee, #0891b2) !important; color: #04131c !important; }
+.text-blue-300, .text-blue-400 { color: #67e8f9 !important; }
+.border-blue-400\/20, .border-blue-400\/25, .border-blue-400\/50, .border-blue-300\/50 { border-color: rgba(34,211,238,.28) !important; }
+.bg-slate-800\/70 { background: rgba(15,31,50,.85) !important; }
+form.rounded-2xl, form.rounded-3xl { box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 45px rgba(0,0,0,.18); }
+textarea, select, input { min-height: 44px; }
+select option { background: #081322; color: #e2e8f0; }
