@@ -8,7 +8,7 @@ const none: Permissions = { manage_students: false, manage_content: false, manag
 
 export default function DashboardNav() {
   const [role, setRole] = useState(''); const [permissions, setPermissions] = useState<Permissions>(none);
-  useEffect(() => { void (async () => { const client = supabaseBrowser(); const { data: { user } } = await client.auth.getUser(); if (!user) return; const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle(); setRole(profile?.role ?? ''); if (profile?.role === 'admin') { const { data } = await client.from('admin_permissions').select('manage_students,manage_content,manage_applications,view_reports').eq('user_id', user.id).maybeSingle(); if (data) setPermissions(data); } })(); }, []);
+  useEffect(() => { void (async () => { const client = supabaseBrowser(); const { data: { session } } = await client.auth.getSession(); if (!session) return; const response = await fetch('/api/portal-access', { headers: { Authorization: `Bearer ${session.access_token}` } }); if (!response.ok) return; const data = await response.json() as { role: string; permissions: Permissions }; setRole(data.role); setPermissions(data.permissions); })(); }, []);
   const superAdmin = role === 'super_admin';
   return <nav className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
     {(superAdmin || permissions.manage_students) && <Link href="/students" className="rounded-2xl bg-blue-600 p-6 text-lg font-bold text-white">Students</Link>}

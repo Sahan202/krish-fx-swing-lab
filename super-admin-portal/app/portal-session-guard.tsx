@@ -9,11 +9,12 @@ export default function PortalSessionGuard({ children }: { children: React.React
     if (pathname === '/login' || pathname === '/') { setReady(true); return; }
     const client = supabaseBrowser(); const { data: { user } } = await client.auth.getUser();
     if (!user) { router.replace('/login'); return; }
-    const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    if (!['admin', 'super_admin'].includes(profile?.role ?? '')) { await client.auth.signOut(); router.replace('/login'); return; }
-    if (profile?.role === 'admin') {
-      const { data: permissions } = await client.from('admin_permissions').select('manage_students,manage_content,manage_applications,view_reports').eq('user_id', user.id).maybeSingle();
-      const allowed = pathname === '/students' ? permissions?.manage_students : pathname === '/content' ? permissions?.manage_content : pathname === '/reports' ? permissions?.view_reports : pathname === '/dashboard' ? permissions?.manage_applications : true;
+    const { data: { session } } = await client.auth.getSession(); const response = await fetch('/api/portal-access', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } });
+    if (!response.ok) { await client.auth.signOut(); router.replace('/login'); return; }
+    const access = await response.json() as { role: string; permissions: { manage_students: boolean; manage_content: boolean; manage_applications: boolean; view_reports: boolean } };
+    if (access.role === 'admin') {
+      const permissions = access.permissions;
+      const allowed = pathname === '/students' ? permissions?.manage_students : pathname === '/content' ? permissions?.manage_content : pathname === '/reports' ? permissions?.view_reports : true;
       if (!allowed) { router.replace('/dashboard'); return; }
     }
     setReady(true);
