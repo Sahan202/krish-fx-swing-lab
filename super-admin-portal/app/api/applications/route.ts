@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
-import { audit, requireAdmin } from '@/lib/admin-audit';
+import { audit, requirePermission } from '@/lib/admin-audit';
 
 export async function PATCH(request: NextRequest) {
   const body = await request.json() as { id?: string; action?: 'approve' | 'reject' };
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!body.id || !body.action || !key) return NextResponse.json({ error: 'Application/action or server configuration is missing.' }, { status: 400 });
-  const actor = await requireAdmin(request);
-  if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const actor = await requirePermission(request, 'manage_applications');
+  if (!actor) return NextResponse.json({ error: 'You do not have application approval permission.' }, { status: 403 });
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: application, error } = await admin.from('student_applications').select('*').eq('id', body.id).single();
   if (error || !application) return NextResponse.json({ error: 'Application not found.' }, { status: 404 });
