@@ -8,6 +8,10 @@ set search_path = public, auth
 as $$
 begin
   if old.role = 'student' then
+    -- Remove the approved application record as well. Otherwise its unique
+    -- email blocks this deleted student from submitting a fresh application.
+    delete from public.student_applications
+    where lower(email) = lower((select email from auth.users where id = old.id));
     delete from auth.users where id = old.id;
   end if;
   return old;
