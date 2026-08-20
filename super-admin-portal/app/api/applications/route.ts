@@ -15,7 +15,23 @@ export async function PATCH(request: NextRequest) {
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: application, error } = await admin.from('student_applications').select('*').eq('id', body.id).single();
   if (error || !application) return NextResponse.json({ error: 'Application not found.' }, { status: 404 });
-  if (body.action === 'reject') { const { error: updateError } = await admin.from('student_applications').update({ status: 'rejected' }).eq('id', body.id); if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 }); await audit(actor, 'APPLICATION_REJECTED', 'student_application', body.id, { email: application.email, fullName: application.full_name }); return NextResponse.json({ status: 'rejected' }); }
+  if (body.action === 'reject') {
+    const { error: updateError } = await admin.from('student_applications').update({ status: 'rejected' }).eq('id', body.id);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 400 });
+    let emailWarning = '';
+    try {
+      const resendKey = process.env.RESEND_API_KEY; const from = process.env.RESEND_FROM_EMAIL;
+      if (!resendKey || !from) throw new Error('Resend is not configured.');
+      const safeName = escapeHtml(application.full_name);
+      const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ from, to: [application.email], subject: 'Update on your Krish FX Swing Lab application', text: `Hi ${application.full_name},\n\nThank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.\n\nIf you need more information, please contact support.`, html: `<main style="font-family:Arial,sans-serif;color:#10233f;max-width:560px;margin:auto;padding:32px"><p style="color:#00aee8;font-weight:700;letter-spacing:1px">KRISH FX SWING LAB</p><h2>Application update</h2><p>Hi ${safeName},</p><p>Thank you for applying to Krish FX Swing Lab. Unfortunately, your application was not approved at this time.</p><p>If you need more information, please contact support.</p></main>` }) });
+      if (!response.ok) throw new Error(`Resend rejected the email (${response.status}): ${await response.text()}`);
+    } catch (emailError) {
+      console.error('Rejection email failed', emailError);
+      emailWarning = `Application rejected, but email could not be sent: ${emailError instanceof Error ? emailError.message : 'unknown error'}`;
+    }
+    await audit(actor, 'APPLICATION_REJECTED', 'student_application', body.id, { email: application.email, fullName: application.full_name });
+    return NextResponse.json({ status: 'rejected', emailWarning });
+  }
   const password = `Kfx!${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}a1`;
   const created = await admin.auth.admin.createUser({ email: application.email, password, email_confirm: true, user_metadata: { full_name: application.full_name } });
   let userId = created.data.user?.id;
