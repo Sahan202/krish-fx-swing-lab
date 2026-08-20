@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { type CookieOptions, createServerClient } from '@supabase/ssr';
-import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { recordCurrentUserEvent } from '@/lib/audit';
 
 export async function GET(request: Request) {
@@ -9,17 +8,17 @@ export async function GET(request: Request) {
   const cookieResponse = NextResponse.next();
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll: () => request.headers.get('cookie')?.split(';').map((item) => { const [name, ...value] = item.trim().split('='); return { name, value: value.join('=') }; }) ?? [], setAll: (items: { name: string; value: string; options: CookieOptions }[]) => items.forEach(({ name, value, options }) => cookieResponse.cookies.set(name, value, options)) } });
   const redirect = (destination: URL) => { const response = NextResponse.redirect(destination); cookieResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie)); return response; };
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
   if (exchangeError) { loginUrl.searchParams.set('error', 'Google sign-in failed. Please try again.'); return redirect(loginUrl); }
-  const { data: { user } } = await supabase.auth.getUser(); if (!user) return redirect(loginUrl);
+  const user = exchangeData.user;
+  if (!user) return redirect(loginUrl);
   const { data: profile } = await supabase.from('profiles').select('approval_status,role,full_name,whatsapp_number,badge').eq('id', user.id).maybeSingle();
   if (!profile || profile.approval_status === 'pending' || profile.approval_status === 'rejected') {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const service = serviceKey ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } }) : null;
-    const { data: application } = service ? await service.from('student_applications').select('id,status').eq('email', user.email ?? '').maybeSingle() : { data: null };
-    if (!application && profile?.approval_status !== 'rejected') return redirect(new URL('/google-onboarding', url.origin));
+    // A pending Google account always returns to onboarding. This lets a student
+    // finish or correct their details even if a previous submission already exists.
+    if (profile?.approval_status !== 'rejected') return redirect(new URL('/google-onboarding', url.origin));
     await supabase.auth.signOut();
-    loginUrl.searchParams.set('error', application?.status === 'rejected' || profile?.approval_status === 'rejected' ? 'Your application was not approved.' : 'Your application is pending Super Admin approval.');
+    loginUrl.searchParams.set('error', 'Your application was not approved.');
     return redirect(loginUrl);
   }
   const sessionId = crypto.randomUUID(); const { error: sessionError } = await supabase.from('active_sessions').upsert({ user_id: user.id, session_id: sessionId, updated_at: new Date().toISOString() });
