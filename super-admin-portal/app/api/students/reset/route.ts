@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   if (authUserError || !authUser.user?.email) return NextResponse.json({ error: 'Could not find this student email address.' }, { status: 404 });
 
   const password = `Kfx!${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}a1`;
-  const result = await admin.auth.admin.updateUserById(id, { password });
+  const result = await admin.auth.admin.updateUserById(id, { password, user_metadata: { must_change_password: true } });
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 });
 
   const email = authUser.user.email;

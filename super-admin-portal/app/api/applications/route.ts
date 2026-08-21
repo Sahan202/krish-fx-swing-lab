@@ -29,9 +29,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ status: 'rejected', emailWarning });
   }
   const password = `Kfx!${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}a1`;
-  const created = await admin.auth.admin.createUser({ email: application.email, password, email_confirm: true, user_metadata: { full_name: application.full_name } });
+  const created = await admin.auth.admin.createUser({ email: application.email, password, email_confirm: true, user_metadata: { full_name: application.full_name, must_change_password: true } });
   let userId = created.data.user?.id;
-  if (!userId && created.error?.message.toLowerCase().includes('already')) { const users = await admin.auth.admin.listUsers(); userId = users.data.users.find((item) => item.email?.toLowerCase() === application.email.toLowerCase())?.id; if (userId) await admin.auth.admin.updateUserById(userId, { password }); }
+  if (!userId && created.error?.message.toLowerCase().includes('already')) { const users = await admin.auth.admin.listUsers(); userId = users.data.users.find((item) => item.email?.toLowerCase() === application.email.toLowerCase())?.id; if (userId) await admin.auth.admin.updateUserById(userId, { password, user_metadata: { must_change_password: true } }); }
   if (!userId) return NextResponse.json({ error: created.error?.message ?? 'Could not create account.' }, { status: 400 });
   const { error: profileError } = await admin.from('profiles').upsert({ id: userId, full_name: application.full_name, phone: application.whatsapp_number, whatsapp_number: application.whatsapp_number, badge: application.badge, role: 'student', approval_status: 'approved' });
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 });

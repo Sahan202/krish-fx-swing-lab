@@ -24,5 +24,5 @@ export async function GET(request: Request) {
   const sessionId = crypto.randomUUID(); const { error: sessionError } = await supabase.from('active_sessions').upsert({ user_id: user.id, session_id: sessionId, updated_at: new Date().toISOString() });
   if (sessionError) { await supabase.auth.signOut(); loginUrl.searchParams.set('error', 'Could not start a secure session.'); return redirect(loginUrl); }
   await recordCurrentUserEvent({ action: 'SIGNED_IN', targetType: 'lms_session', targetId: user.id, details: { source: 'google' } });
-  const response = redirect(new URL(profile.role === 'admin' ? '/super-admin' : '/dashboard', url.origin)); response.cookies.set('krish_session_id', sessionId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 2592000 }); return response;
+  const destination = user.user_metadata?.must_change_password ? '/change-password' : profile.role === 'admin' ? '/super-admin' : '/dashboard'; const response = redirect(new URL(destination, url.origin)); response.cookies.set('krish_session_id', sessionId, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 2592000 }); return response;
 }

@@ -10,6 +10,11 @@ import ThemeInitializer from '@/components/layout/theme-initializer';
 export const metadata: Metadata = {
   title: 'Krish FX Swing Lab',
   description: 'Master the markets with a clear, structured swing trading system.',
+  icons: {
+    icon: '/krish-fx-logo.jpeg',
+    shortcut: '/krish-fx-logo.jpeg',
+    apple: '/krish-fx-logo.jpeg',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
