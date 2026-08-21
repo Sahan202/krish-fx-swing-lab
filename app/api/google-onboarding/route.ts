@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const fullName = body.fullName?.trim() ?? '';
   const whatsappNumber = body.whatsappNumber?.trim() ?? '';
   const badge = Number(body.badge);
-  if (fullName.length < 2 || fullName.length > 100 || !/^[0-9+()\-\s]{7,25}$/.test(whatsappNumber) || ![1, 2, 3].includes(badge)) return NextResponse.json({ error: 'Please complete all required fields with valid details.' }, { status: 400 });
+  if (fullName.length < 2 || fullName.length > 100 || !/^[0-9+()\-\s]{7,25}$/.test(whatsappNumber) || ![1, 2, 3, 4].includes(badge)) return NextResponse.json({ error: 'Please complete all required fields with valid details.' }, { status: 400 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return NextResponse.json({ error: 'Google sign-in session expired. Please sign in again.' }, { status: 401 });

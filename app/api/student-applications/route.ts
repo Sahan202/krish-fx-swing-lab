@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     fullName.length < 2 || fullName.length > 100 || /[\u0000-\u001F]/.test(fullName)
     || !emailPattern.test(email) || email.length > 254
     || !phonePattern.test(whatsappNumber)
-    || ![1, 2, 3].includes(badge)
+    || ![1, 2, 3, 4].includes(badge)
     || turnstileToken.length < 20 || turnstileToken.length > 2048
   ) return NextResponse.json({ error: 'Please enter valid application details and complete the security check.' }, { status: 400 });
 
