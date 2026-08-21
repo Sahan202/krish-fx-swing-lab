@@ -25,3 +25,6 @@ export async function PATCH(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 400 }); await audit(actor, 'MAIN_ADMIN_PERMISSIONS_UPDATED', 'admin_account', body.id, { permissions }); return NextResponse.json({ ok: true });
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not update permissions.' }, { status: 500 }); }
 }
+
+
+export async function DELETE(request: NextRequest) {   try {     const actor = await requireSuperAdmin(request); if (!actor) return NextResponse.json({ error: 'Only the Super Admin can delete Main Admin accounts.' }, { status: 403 });     const body = await request.json() as { id?: string }; if (!body.id || body.id === actor.id) return NextResponse.json({ error: 'A valid different admin ID is required.' }, { status: 400 });     const client = serviceClient(); await client.from('admin_permissions').delete().eq('user_id', body.id); const { error } = await client.auth.admin.deleteUser(body.id);     if (error) return NextResponse.json({ error: error.message }, { status: 400 });     await audit(actor, 'MAIN_ADMIN_DELETED', 'admin_account', body.id); return NextResponse.json({ ok: true });   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not delete admin.' }, { status: 500 }); } }
