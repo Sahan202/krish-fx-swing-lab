@@ -10,12 +10,16 @@ create table if not exists public.student_video_permissions (
 create index if not exists student_video_permissions_lesson_idx on public.student_video_permissions (lesson_id);
 alter table public.student_video_permissions enable row level security;
 
+drop policy if exists "Students read own video permissions" on public.student_video_permissions;
 create policy "Students read own video permissions" on public.student_video_permissions for select using (student_id = auth.uid());
+drop policy if exists "Super admins read video permissions" on public.student_video_permissions;
 create policy "Super admins read video permissions" on public.student_video_permissions for select using (exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin'));
+drop policy if exists "Super admins grant video permissions" on public.student_video_permissions;
 create policy "Super admins grant video permissions" on public.student_video_permissions for insert with check (
   granted_by = auth.uid() and exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin')
   and exists (select 1 from public.profiles where id = student_id and role = 'student')
 );
+drop policy if exists "Super admins revoke video permissions" on public.student_video_permissions;
 create policy "Super admins revoke video permissions" on public.student_video_permissions for delete using (exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin'));
 
 create or replace function public.can_access_lesson(target_lesson_id uuid, target_course_id uuid)
