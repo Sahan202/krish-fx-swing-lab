@@ -42,4 +42,13 @@ revoke all on function public.can_access_lesson(uuid, uuid) from public;
 grant execute on function public.can_access_lesson(uuid, uuid) to authenticated;
 drop policy if exists "Approved enrolled students read lessons" on public.lessons;
 drop policy if exists "Students read permitted lessons" on public.lessons;
-create policy "Students read permitted lessons" on public.lessons for select using (public.can_access_lesson(id, course_id));
+create policy "Approved enrolled students read lessons"
+on public.lessons for select
+using (
+  public.is_lms_staff()
+  or (
+    exists (select 1 from public.profiles where id = auth.uid() and approval_status = 'approved')
+    and exists (select 1 from public.enrollments where student_id = auth.uid() and course_id = lessons.course_id)
+    and exists (select 1 from public.courses where id = lessons.course_id and published = true)
+  )
+);

@@ -9,9 +9,12 @@ export async function POST(request: NextRequest) {
   if (!videoId || !/^[a-zA-Z0-9_-]+$/.test(videoId)) return NextResponse.json({ error: 'A valid VdoCipher video ID is required.' }, { status: 400 });
   const { data: profile } = await supabase.from('profiles').select('role,approval_status').eq('id', user.id).maybeSingle();
   const staff = ['instructor', 'admin', 'super_admin'].includes(profile?.role ?? '');
-  const { data: lesson } = await supabase.from('lessons').select('course_id,courses!inner(published)').eq('vdocipher_video_id', videoId).maybeSingle();
+  const { data: lesson } = await supabase.from('lessons').select('id,course_id,courses!inner(published)').eq('vdocipher_video_id', videoId).maybeSingle();
   const course = Array.isArray(lesson?.courses) ? lesson.courses[0] : lesson?.courses;
   if (!lesson || !course?.published) return NextResponse.json({ error: 'Video is not available.' }, { status: 404 });
+  const { data: canAccess, error: accessError } = await supabase.rpc('can_access_lesson', { target_lesson_id: lesson.id, target_course_id: lesson.course_id });
+  if (accessError) return NextResponse.json({ error: 'Could not verify video permission.' }, { status: 500 });
+  if (!canAccess) return NextResponse.json({ error: 'Not approved' }, { status: 403 });
   if (!staff) {
     if (profile?.approval_status !== 'approved') return NextResponse.json({ error: 'Your account is not approved.' }, { status: 403 });
     const { data: enrollment } = await supabase.from('enrollments').select('id').eq('student_id', user.id).eq('course_id', lesson.course_id).maybeSingle();
