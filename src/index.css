@@ -378,3 +378,12 @@ section[class*="linear-gradient(145deg"] p { color: #ffffff !important; }
 .signup-submit-button:hover,
 .theme-dark .signup-submit-button:hover { background-color: #169de0 !important; }
 .signup-submit-button:disabled { opacity: 1 !important; }
+
+
+/* Keep Login fields readable in dark theme mode. */
+.theme-dark .login-field {
+  background-color: rgb(255 255 255 / 0.78) !important;
+  border-color: rgb(255 255 255 / 0.75) !important;
+  color: #0f2747 !important;
+}
+.theme-dark .login-field::placeholder { color: #64748b !important; }
