@@ -339,3 +339,42 @@ article:hover { box-shadow: 0 18px 42px rgb(0 184 254 / 0.14); }
 section[class*="linear-gradient(145deg"] { color: #ffffff !important; }
 section[class*="linear-gradient(145deg"] h1,
 section[class*="linear-gradient(145deg"] p { color: #ffffff !important; }
+
+
+@keyframes webinar-notice-enter {
+  from { opacity: 0; transform: translate(-50%, 20px) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.webinar-notice-enter {
+  animation: webinar-notice-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .webinar-notice-enter { animation: none; }
+}
+
+
+/* Create account fields retain the light glass style in dark theme mode. */
+.theme-dark .signup-field {
+  background-color: rgb(255 255 255 / 0.78) !important;
+  border-color: rgb(255 255 255 / 0.75) !important;
+  color: #0f2747 !important;
+}
+.theme-dark .signup-field::placeholder { color: #64748b !important; }
+
+
+/* Keep the Create account action button fully opaque and readable. */
+.signup-submit-button,
+.theme-dark .signup-submit-button {
+  isolation: isolate;
+  background-color: #00b8fe !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  opacity: 1;
+}
+.signup-submit-button::before,
+.signup-submit-button::after { display: none !important; }
+.signup-submit-button:hover,
+.theme-dark .signup-submit-button:hover { background-color: #169de0 !important; }
+.signup-submit-button:disabled { opacity: 1 !important; }
