@@ -13,17 +13,17 @@ export default async function SiteNav() {
   const initial = name.charAt(0).toUpperCase();
   async function signOut() { 'use server'; const client = await createClient(); await client.auth.signOut(); redirect('/'); }
 
-  return <header className="border-b border-white/10 bg-[#07111f] text-white">
-    <nav className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
-      <Link href="/" className="group flex shrink-0 items-center gap-3 font-semibold tracking-tight"><span className="grid size-10 place-items-center overflow-hidden rounded-full bg-white"><img src="/krish-fx-logo.jpeg" alt="Krish FX Swing Lab" className="size-full object-cover" /></span><span className="hidden sm:inline">Krish FX <span className="text-amber-400">Swing Lab</span></span></Link>
+  return <header className="premium-nav border-b border-white/10 bg-[#07111f] text-white">
+    <nav className="premium-nav-inner mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
+      <Link href="/" className="premium-nav-brand group flex shrink-0 items-center gap-3 font-semibold tracking-tight"><span className="premium-nav-logo grid size-10 place-items-center overflow-hidden rounded-full bg-white"><img src="/krish-fx-logo.jpeg" alt="Krish FX Swing Lab" className="size-full object-cover" /></span><span className="hidden sm:inline">Krish FX <span className="text-amber-400">Swing Lab</span></span></Link>
       <NavLinks canManage={canManage} role={profile?.role ?? undefined} />
       {user ? <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <Link href="/dashboard" className="hidden items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-[#07111f] shadow-lg shadow-amber-400/15 transition hover:-translate-y-0.5 hover:bg-amber-300 sm:inline-flex"><LayoutDashboard className="size-3.5" />My learning</Link>
-        <div className="hidden max-w-52 items-center gap-2 rounded-full border border-white/10 bg-white/[.05] py-1.5 pl-1.5 pr-3 lg:flex" title={user.email ?? ''}>
+        <Link href="/dashboard" className="premium-nav-learning hidden items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-[#07111f] shadow-lg shadow-amber-400/15 transition hover:-translate-y-0.5 hover:bg-amber-300 sm:inline-flex"><LayoutDashboard className="size-3.5" />My learning</Link>
+        <div className="premium-nav-user hidden max-w-52 items-center gap-2 rounded-full border border-white/10 bg-white/[.05] py-1.5 pl-1.5 pr-3 lg:flex" title={user.email ?? ''}>
           <span className="grid size-7 place-items-center rounded-full bg-gradient-to-br from-amber-300 to-orange-500 text-xs font-black text-[#07111f]">{initial}</span>
           <span className="min-w-0"><span className="block truncate text-xs font-semibold text-white">{name}</span><span className="block truncate text-[10px] text-slate-400">{user.email}</span></span>
         </div>
-        <form action={signOut}><button aria-label="Log out" title="Log out" className="inline-flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-400/5 px-3 py-2 text-xs font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500 hover:text-white"><LogOut className="size-3.5" /><span className="hidden sm:inline">Logout</span></button></form>
+        <form action={signOut}><button aria-label="Log out" title="Log out" className="premium-nav-logout inline-flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-400/5 px-3 py-2 text-xs font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500 hover:text-white"><LogOut className="size-3.5" /><span className="hidden sm:inline">Logout</span></button></form>
       </div> : <div className="flex shrink-0 items-center gap-2"><Link href="/login" className="hidden rounded-full px-3 py-2 text-sm font-medium text-slate-300 hover:text-amber-400 sm:inline-flex">Login</Link><Link href="/signup" className="rounded-full bg-amber-400 px-4 py-2.5 text-xs font-bold text-[#07111f] sm:px-5 sm:text-sm">Join the lab</Link></div>}
     </nav>
   </header>;

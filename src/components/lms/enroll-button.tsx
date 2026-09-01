@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -8,9 +8,24 @@ export default function EnrollButton({ courseId, enrolled }: { courseId: string;
   const [isEnrolled, setIsEnrolled] = useState(enrolled);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showEnrollmentGuide, setShowEnrollmentGuide] = useState(false);
   const router = useRouter();
 
+  const guideKey = `krish-enrollment-guide-seen-${courseId}`;
+
+  useEffect(() => {
+    if (!enrolled && !window.localStorage.getItem(guideKey)) {
+      setShowEnrollmentGuide(true);
+      window.localStorage.setItem(guideKey, 'true');
+    }
+  }, [enrolled, guideKey]);
+
+  function dismissGuide() {
+    setShowEnrollmentGuide(false);
+  }
+
   async function enroll() {
+    setShowEnrollmentGuide(false);
     setLoading(true); setError('');
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,5 +39,5 @@ export default function EnrollButton({ courseId, enrolled }: { courseId: string;
     window.location.reload();
   }
 
-  return <div className="text-right"><button onClick={enroll} disabled={isEnrolled || loading} className="rounded-xl bg-amber-400 px-5 py-3 font-semibold text-[#07111f] disabled:cursor-not-allowed disabled:opacity-60">{isEnrolled ? 'Enrolled' : loading ? 'Enrolling…' : 'Enroll in course'}</button>{error && <p className="mt-2 text-xs text-rose-300">{error}</p>}</div>;
+  return <div className="relative text-right">{showEnrollmentGuide && !isEnrolled && <div role="status" className="absolute right-0 top-full z-40 mt-4 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-cyan-300/25 bg-[#0b1b31] p-4 text-left shadow-2xl shadow-black/40"><span aria-hidden="true" className="absolute -top-2 right-8 size-4 rotate-45 border-l border-t border-cyan-300/25 bg-[#0b1b31]" /><p className="!text-sm !font-bold !text-white">Start your course here</p><p className="!mt-1 !text-xs !leading-5 !text-slate-300">Click the Enroll in course button to activate your lesson access.</p><button type="button" onClick={dismissGuide} className="!mt-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 !text-xs !font-bold !text-cyan-200">Got it</button></div>}<button onClick={enroll} disabled={isEnrolled || loading} className="rounded-xl bg-amber-400 px-5 py-3 font-semibold text-[#07111f] disabled:cursor-not-allowed disabled:opacity-60">{isEnrolled ? 'Enrolled' : loading ? 'Enrolling…' : 'Enroll in course'}</button>{error && <p className="mt-2 text-xs text-rose-300">{error}</p>}</div>;
 }
