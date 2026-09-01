@@ -639,6 +639,13 @@ section[class*="linear-gradient(145deg"] p { color: #ffffff !important; }
 .theme-dark .dashboard-premium .dashboard-course-card h2,
 .theme-dark .dashboard-premium .dashboard-course-card h3 { color: #f8fafc !important; }
 @media (max-width: 767px) {
+  .premium-nav-inner { min-height: 4.5rem; gap: 0.5rem; padding-inline: 0.75rem; }
+  .premium-nav-brand { gap: 0.55rem; }
+  .premium-nav-logo { width: 2.5rem; height: 2.5rem; box-shadow: 0 6px 18px rgb(0 0 0 / 0.28); }
+  .premium-nav .relative > button { width: 2.75rem; height: 2.75rem; border-radius: 0.9rem; box-shadow: 0 8px 20px rgb(0 0 0 / 0.2); }
+  .premium-nav .relative > div { top: 4.15rem; right: 0.75rem; width: min(15rem, calc(100vw - 1.5rem)); padding: 0.5rem; border-color: rgb(125 211 252 / 0.22); background: rgb(7 18 33 / 0.97); backdrop-filter: blur(18px); }
+  .premium-nav .relative > div a { padding: 0.8rem 0.9rem; font-size: 0.84rem; }
+  .premium-nav-logout { padding: 0.65rem; }
   .dashboard-premium .dashboard-hero { min-height: auto; border-radius: 1.6rem; }
   .dashboard-premium .dashboard-hero::after { opacity: 0.35; right: -4rem; bottom: -4rem; }
   .dashboard-premium .dashboard-stats { margin-top: 1rem; padding-inline: 0; }
@@ -796,3 +803,9 @@ section[class*="linear-gradient(145deg"] p { color: #ffffff !important; }
   color: #0f2747 !important;
 }
 .theme-dark .login-field::placeholder { color: #64748b !important; }
+
+@media (max-width: 767px) {
+  .premium-mobile-nav-links { scrollbar-width: none; }
+  .premium-mobile-nav-links::-webkit-scrollbar { display: none; }
+  .premium-mobile-nav-links a { flex: 0 0 auto; }
+}
