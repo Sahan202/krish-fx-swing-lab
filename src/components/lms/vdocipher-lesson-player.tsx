@@ -58,15 +58,19 @@ export default function VdoCipherLessonPlayer({ course, lessons, sections = [], 
   }, [lesson]);
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setPlayerUrl('');
-      } else if (playerUrlRef.current) {
-        setPlayerUrl(playerUrlRef.current);
-      }
+    const hidePlayer = () => setPlayerUrl('');
+    const restorePlayer = () => {
+      if (!document.hidden && playerUrlRef.current) setPlayerUrl(playerUrlRef.current);
     };
+    const handleVisibilityChange = () => { if (document.hidden) hidePlayer(); else restorePlayer(); };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', hidePlayer);
+    window.addEventListener('focus', restorePlayer);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', hidePlayer);
+      window.removeEventListener('focus', restorePlayer);
+    };
   }, []);
   async function markComplete() { if (!lesson) return; setSaving(true); const supabase = createClient(); const { data: { user } } = await supabase.auth.getUser(); if (user) { await supabase.from('student_progress').upsert({ student_id: user.id, lesson_id: lesson.id, completed: true, watched_seconds: lesson.duration_seconds ?? 0 }, { onConflict: 'student_id,lesson_id' }); setCompleted((current) => new Set([...current, lesson.id])); } setSaving(false); }
   function selectSet(id: string, group: Lesson[]) { setActiveSectionId(id); if (group[0]) setActiveId(group[0].id); }
