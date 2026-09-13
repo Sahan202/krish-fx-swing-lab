@@ -6,6 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 export default function SessionGuard() {
   useEffect(() => {
     let checking = false;
+    // Do not sign a learner out because of one interrupted background request.
+    // This is particularly important while an embedded video player is active,
+    // where browsers can briefly deprioritize the parent page's network work.
+    let consecutiveInvalidChecks = 0;
 
     const publicPaths = [
       '/login',
@@ -43,8 +47,16 @@ export default function SessionGuard() {
           cache: 'no-store',
         });
 
+        if (response.status === 401) {
+          consecutiveInvalidChecks += 1;
+        } else if (response.ok) {
+          consecutiveInvalidChecks = 0;
+        }
+
+        // A genuine replacement by another device remains enforced, but a
+        // single transient failed poll can no longer end the local session.
         if (
-          response.status === 401 &&
+          consecutiveInvalidChecks >= 2 &&
           window.location.pathname !== '/login'
         ) {
           await supabase.auth.signOut({ scope: 'local' });
@@ -61,7 +73,7 @@ export default function SessionGuard() {
       }
     };
 
-    const timer = window.setInterval(check, 3000);
+    const timer = window.setInterval(check, 15000);
 
     window.addEventListener('focus', check);
     document.addEventListener('visibilitychange', onVisibility);
