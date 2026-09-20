@@ -4,8 +4,26 @@ import { audit, requirePermission, serviceClient } from '@/lib/admin-audit';
 function lessonValues(body: { title?: string; description?: string; videoId?: string; order?: string | number; sectionId?: string }) {
   return { title: String(body.title ?? '').trim(), description: body.description?.trim() || null, vdocipher_video_id: body.videoId?.trim() || null, lesson_order: Number(body.order) || 1, section_id: body.sectionId || null };
 }
+
+async function grantNewLessonToConfiguredStudents(lessonId: string, courseId: string, grantedBy: string) {
+  const db = serviceClient();
+  const { data, error } = await db
+    .from('student_video_permissions')
+    .select('student_id,lessons!inner(course_id)')
+    .eq('lessons.course_id', courseId);
+  if (error) throw error;
+
+  const studentIds = [...new Set((data ?? []).map((permission) => permission.student_id))];
+  if (!studentIds.length) return;
+
+  const { error: grantError } = await db
+    .from('student_video_permissions')
+    .insert(studentIds.map((studentId) => ({ student_id: studentId, lesson_id: lessonId, granted_by: grantedBy })));
+  if (grantError) throw grantError;
+}
+
 export async function POST(request: NextRequest) {
-  try { const actor = await requirePermission(request, 'manage_content'); if (!actor) return NextResponse.json({ error: 'You do not have lesson/content permission.' }, { status: 403 }); const body = await request.json(); if (!body.courseId || !String(body.title ?? '').trim()) return NextResponse.json({ error: 'Course and lesson title are required.' }, { status: 400 }); const { data, error } = await serviceClient().from('lessons').insert({ course_id: body.courseId, ...lessonValues(body) }).select().single(); if (error) return NextResponse.json({ error: error.message }, { status: 400 }); await audit(actor, 'LESSON_CREATED', 'lesson', data.id, { title: data.title, courseId: data.course_id, sectionId: data.section_id, videoId: data.vdocipher_video_id, order: data.lesson_order }); return NextResponse.json({ lesson: data }); }
+  try { const actor = await requirePermission(request, 'manage_content'); if (!actor) return NextResponse.json({ error: 'You do not have lesson/content permission.' }, { status: 403 }); const body = await request.json(); if (!body.courseId || !String(body.title ?? '').trim()) return NextResponse.json({ error: 'Course and lesson title are required.' }, { status: 400 }); const { data, error } = await serviceClient().from('lessons').insert({ course_id: body.courseId, ...lessonValues(body) }).select().single(); if (error) return NextResponse.json({ error: error.message }, { status: 400 }); await grantNewLessonToConfiguredStudents(data.id, data.course_id, actor.id); await audit(actor, 'LESSON_CREATED', 'lesson', data.id, { title: data.title, courseId: data.course_id, sectionId: data.section_id, videoId: data.vdocipher_video_id, order: data.lesson_order }); return NextResponse.json({ lesson: data }); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Could not create lesson.' }, { status: 500 }); }
 }
 export async function PATCH(request: NextRequest) {
