@@ -15,7 +15,13 @@ export async function GET() {
   const admin = adminClient();
   if (!admin) return NextResponse.json({ error: 'Live classroom server is not configured.' }, { status: 503 });
   const { data: profile } = await admin.from('profiles').select('role,approval_status').eq('id', user.id).maybeSingle();
-  if (profile?.role !== 'student' || profile.approval_status !== 'approved') return NextResponse.json({ error: 'Your student account is not approved.' }, { status: 403 });
+  const isSuperAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+  if (!isSuperAdmin && (profile?.role !== 'student' || profile.approval_status !== 'approved')) return NextResponse.json({ error: 'Your student account is not approved.' }, { status: 403 });
+  if (isSuperAdmin) {
+    const { data, error } = await admin.from('live_sessions').select('id,title,status,scheduled_at,courses(title)').in('status', ['scheduled', 'live']).not('zoom_join_url', 'is', null).order('scheduled_at');
+    if (error) return NextResponse.json({ error: 'Could not load live classes.' }, { status: 500 });
+    return NextResponse.json({ sessions: data ?? [] });
+  }
   const { data: enrollments } = await admin.from('enrollments').select('course_id').eq('student_id', user.id);
   const courseIds = (enrollments ?? []).map((item) => item.course_id);
   if (!courseIds.length) return NextResponse.json({ sessions: [] });
