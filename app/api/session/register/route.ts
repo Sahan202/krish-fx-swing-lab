@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   if (deviceError) return NextResponse.json({ error: 'Could not verify this device.' }, { status: 500 });
   if (!deviceAllowed) {
-    return NextResponse.json({ error: 'This account already has two registered devices. Contact support to reset them.' }, { status: 403 });
+    return NextResponse.json({ error: 'This account already has three registered devices. Contact support to reset them.' }, { status: 403 });
   }
 
   const sessionId = randomUUID();

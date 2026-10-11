@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       'error',
       deviceError
         ? 'Could not verify this device.'
-        : 'This account already has two registered devices. Contact support to reset them.',
+        : 'This account already has three registered devices. Contact support to reset them.',
     );
     return redirect(loginUrl);
   }
