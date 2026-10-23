@@ -264,7 +264,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowRegistrationNotice(false)}
                 aria-label="Close registration information"
-                className="absolute top-4 right-4 grid size-9 place-items-center rounded-lg border border-white/10 bg-white/[.04] text-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
+                className="absolute top-4 right-4 grid size-9 place-items-center rounded-lg border border-sky-300 bg-sky-400 text-lg text-white transition hover:bg-sky-500"
               >
                 ×
               </button>
