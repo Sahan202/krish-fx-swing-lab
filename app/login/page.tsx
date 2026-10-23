@@ -2,26 +2,332 @@
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
-  async function login(event: FormEvent) { event.preventDefault(); setLoading(true); setError(''); const client = createClient(); const { data, error: authError } = await client.auth.signInWithPassword({ email, password }); if (authError) setError(authError.message); else if (data.user) { const { data: profile } = await client.from('profiles').select('approval_status,role').eq('id', data.user.id).maybeSingle(); if (!profile) { await client.auth.signOut(); setError('This account has been removed. Please create a new account or contact support.'); } else if (profile.approval_status === 'pending') { await client.auth.signOut(); setError('Your application is pending Super Admin approval.'); } else if (profile.approval_status === 'rejected') { await client.auth.signOut(); setError('Your application was not approved. Please contact support.'); } else { const sessionResponse = await fetch('/api/session/register', { method: 'POST' }); if (!sessionResponse.ok) { const sessionError = await sessionResponse.json().catch(() => ({})) as { error?: string }; await client.auth.signOut(); setError(sessionError.error ?? 'Could not start a secure session.'); } else { const { data: { user: freshUser } } = await client.auth.getUser(); if (profile.role !== 'admin') window.localStorage.removeItem('krish-webinar-notice-seen'); window.location.href = freshUser?.user_metadata?.must_change_password ? '/change-password' : profile.role === 'admin' ? '/super-admin' : '/dashboard'; } } } setLoading(false); }
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showRegistrationNotice, setShowRegistrationNotice] = useState(true);
+
+  async function login(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    const client = createClient();
+    const { data, error: authError } = await client.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
+    } else if (data.user) {
+      const { data: profile } = await client
+        .from('profiles')
+        .select('approval_status,role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      if (!profile) {
+        await client.auth.signOut();
+        setError(
+          'This account has been removed. Please create a new account or contact support.'
+        );
+      } else if (profile.approval_status === 'pending') {
+        await client.auth.signOut();
+        setError('Your application is pending Super Admin approval.');
+      } else if (profile.approval_status === 'rejected') {
+        await client.auth.signOut();
+        setError('Your application was not approved. Please contact support.');
+      } else {
+        const sessionResponse = await fetch('/api/session/register', {
+          method: 'POST',
+        });
+        if (!sessionResponse.ok) {
+          const sessionError = (await sessionResponse
+            .json()
+            .catch(() => ({}))) as { error?: string };
+          await client.auth.signOut();
+          setError(sessionError.error ?? 'Could not start a secure session.');
+        } else {
+          const {
+            data: { user: freshUser },
+          } = await client.auth.getUser();
+          if (profile.role !== 'admin')
+            window.localStorage.removeItem('krish-webinar-notice-seen');
+          window.location.href = freshUser?.user_metadata?.must_change_password
+            ? '/change-password'
+            : profile.role === 'admin'
+              ? '/super-admin'
+              : '/dashboard';
+        }
+      }
+    }
+    setLoading(false);
+  }
+
   async function loginWithGoogle() {
     if (loading) return;
-    setLoading(true); setError('');
-    const { data, error: oauthError } = await createClient().auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback`, skipBrowserRedirect: true },
-    });
+    setLoading(true);
+    setError('');
+    const { data, error: oauthError } =
+      await createClient().auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: true,
+        },
+      });
     if (oauthError || !data.url) {
-      setError(oauthError?.message ?? 'Could not start Google sign-in. Please try again.');
+      setError(
+        oauthError?.message ??
+          'Could not start Google sign-in. Please try again.'
+      );
       setLoading(false);
       return;
     }
     window.localStorage.removeItem('krish-webinar-notice-seen');
     window.location.assign(data.url);
   }
-  return <main className="relative grid min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,#8fc8ec_0%,#477da8_42%,#1d3b59_100%)] px-5 py-8 !text-slate-900 sm:px-8"><div className="pointer-events-none absolute -left-40 -top-40 size-[32rem] rounded-full bg-cyan-400/15 blur-3xl" /><div className="pointer-events-none absolute -bottom-44 -right-36 size-[30rem] rounded-full bg-orange-400/10 blur-3xl" /><div className="relative mx-auto grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/35 shadow-2xl shadow-blue-900/20 backdrop-blur-xl lg:grid-cols-[.9fr_1.1fr]"><section className="relative hidden min-h-[680px] flex-col justify-between overflow-hidden bg-[#061a34] bg-cover bg-center p-10 text-white lg:flex" style={{ backgroundImage: "linear-gradient(145deg, rgb(6 26 52 / 0.35), rgb(7 56 90 / 0.2)), url(/login-trading-bg.png)" }}><div><div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold tracking-wide text-white"><Sparkles className="h-4 w-4" />Krish FX Swing Lab</div><h1 className="mt-10 max-w-sm text-5xl font-bold leading-[1.05] !text-white">Trade with a clearer process.</h1><p className="mt-6 max-w-sm text-base leading-7 !text-white/80">A focused learning space for traders who want structure, consistency and confident execution.</p></div><div><ShieldCheck className="h-6 w-6 text-white" /><p className="mt-4 font-semibold text-white">Protected learning access</p><p className="mt-1 text-sm leading-6 text-white/70">Your account and secured video lessons are available after approval.</p></div></section><section className="flex min-h-[620px] items-center justify-center border border-white/55 bg-white/20 p-6 !text-slate-900 shadow-2xl [&_h1]:!text-slate-900 [&_h2]:!text-slate-900 [&_h3]:!text-slate-900 [&_p]:!text-slate-700 [&_label]:!text-slate-700 [&_a]:!text-blue-900 [&_span]:!text-slate-900 backdrop-blur-xl sm:p-10"><form onSubmit={login} className="w-full max-w-md"><div className="mb-9"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-cyan-500/25"><img src="/krish-fx-logo.jpeg" alt="Krish FX Swing Lab" className="size-full object-cover" /></span><div><p className="font-bold text-white">Krish FX <span className="text-cyan-300">Swing Lab</span></p><p className="text-xs text-slate-400">Secure student access</p></div></div><p className="mt-9 text-xs font-bold uppercase tracking-[.2em] text-cyan-300">Welcome back</p><h2 className="mt-2 text-3xl font-bold text-white sm:text-4xl">Sign in to your learning space.</h2><p className="mt-3 leading-7 text-slate-400">Continue your video lessons and track your progress.</p></div><label className="block text-sm font-semibold text-slate-300">Email address<div className="relative mt-2"><Mail className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" /><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="login-field w-full rounded-xl border border-white/70 bg-white/70 py-3.5 pl-12 pr-4 text-slate-900 shadow-sm shadow-blue-900/5 outline-none transition focus:border-cyan-400" /></div></label><label className="mt-5 block text-sm font-semibold text-slate-300">Password<div className="relative mt-2"><LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" /><input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className="login-field w-full rounded-xl border border-white/70 bg-white/70 py-3.5 pl-12 pr-4 text-slate-900 shadow-sm shadow-blue-900/5 outline-none transition focus:border-cyan-400" /></div></label>{error && <p className="mt-5 rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">{error}</p>}<button disabled={loading} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00b8fe] py-3.5 font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:bg-[#169de0] disabled:opacity-50">{loading ? 'Signing in…' : <>Sign in <ArrowRight className="size-4" /></>}</button><div className="my-6 flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-white/10" />OR<span className="h-px flex-1 bg-white/10" /></div><button type="button" onClick={loginWithGoogle} disabled={loading} className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"><img src="/google-white.svg" alt="Google" className="size-5" />Continue with Google</button><p className="mt-7 text-center text-sm text-slate-400">New student? <Link href="/signup" className="font-bold text-cyan-300 hover:text-cyan-200">Register Account</Link></p></form></section></div></main>;
+
+  return (
+    <>
+      <main className="relative grid min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,#8fc8ec_0%,#477da8_42%,#1d3b59_100%)] px-5 py-8 !text-slate-900 sm:px-8">
+        <div className="pointer-events-none absolute -top-40 -left-40 size-[32rem] rounded-full bg-cyan-400/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-36 -bottom-44 size-[30rem] rounded-full bg-orange-400/10 blur-3xl" />
+        <div className="relative mx-auto grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/35 shadow-2xl shadow-blue-900/20 backdrop-blur-xl lg:grid-cols-[.9fr_1.1fr]">
+          <section
+            className="relative hidden min-h-[680px] flex-col justify-between overflow-hidden bg-[#061a34] bg-cover bg-center p-10 text-white lg:flex"
+            style={{
+              backgroundImage:
+                'linear-gradient(145deg, rgb(6 26 52 / 0.35), rgb(7 56 90 / 0.2)), url(/login-trading-bg.png)',
+            }}
+          >
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold tracking-wide text-white">
+                <Sparkles className="h-4 w-4" />
+                Krish FX Swing Lab
+              </div>
+              <h1 className="mt-10 max-w-sm text-5xl leading-[1.05] font-bold !text-white">
+                Trade with a clearer process.
+              </h1>
+              <p className="mt-6 max-w-sm text-base leading-7 !text-white/80">
+                A focused learning space for traders who want structure,
+                consistency and confident execution.
+              </p>
+            </div>
+            <div>
+              <ShieldCheck className="h-6 w-6 text-white" />
+              <p className="mt-4 font-semibold text-white">
+                Protected learning access
+              </p>
+              <p className="mt-1 text-sm leading-6 text-white/70">
+                Your account and secured video lessons are available after
+                approval.
+              </p>
+            </div>
+          </section>
+          <section className="flex min-h-[620px] items-center justify-center border border-white/55 bg-white/20 p-6 !text-slate-900 shadow-2xl backdrop-blur-xl sm:p-10 [&_a]:!text-blue-900 [&_h1]:!text-slate-900 [&_h2]:!text-slate-900 [&_h3]:!text-slate-900 [&_label]:!text-slate-700 [&_p]:!text-slate-700 [&_span]:!text-slate-900">
+            <form onSubmit={login} className="w-full max-w-md">
+              <div className="mb-9">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-11 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-cyan-500/25">
+                    <img
+                      src="/krish-fx-logo.jpeg"
+                      alt="Krish FX Swing Lab"
+                      className="size-full object-cover"
+                    />
+                  </span>
+                  <div>
+                    <p className="font-bold text-white">
+                      Krish FX <span className="text-cyan-300">Swing Lab</span>
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Secure student access
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-9 text-xs font-bold tracking-[.2em] text-cyan-300 uppercase">
+                  Welcome back
+                </p>
+                <h2 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+                  Sign in to your learning space.
+                </h2>
+                <p className="mt-3 leading-7 text-slate-400">
+                  Continue your video lessons and track your progress.
+                </p>
+              </div>
+              <label className="block text-sm font-semibold text-slate-300">
+                Email address
+                <div className="relative mt-2">
+                  <Mail className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    required
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="login-field w-full rounded-xl border border-white/70 bg-white/70 py-3.5 pr-4 pl-12 text-slate-900 shadow-sm shadow-blue-900/5 transition outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </label>
+              <label className="mt-5 block text-sm font-semibold text-slate-300">
+                Password
+                <div className="relative mt-2">
+                  <LockKeyhole className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    required
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Enter your password"
+                    className="login-field w-full rounded-xl border border-white/70 bg-white/70 py-3.5 pr-4 pl-12 text-slate-900 shadow-sm shadow-blue-900/5 transition outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </label>
+              {error && (
+                <p className="mt-5 rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-300">
+                  {error}
+                </p>
+              )}
+              <button
+                disabled={loading}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00b8fe] py-3.5 font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:bg-[#169de0] disabled:opacity-50"
+              >
+                {loading ? (
+                  'Signing in…'
+                ) : (
+                  <>
+                    Sign in <ArrowRight className="size-4" />
+                  </>
+                )}
+              </button>
+              <div className="my-6 flex items-center gap-3 text-xs text-slate-500">
+                <span className="h-px flex-1 bg-white/10" />
+                OR
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+              <button
+                type="button"
+                onClick={loginWithGoogle}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <img src="/google-white.svg" alt="Google" className="size-5" />
+                Continue with Google
+              </button>
+              <p className="mt-7 text-center text-sm text-slate-400">
+                New student?{' '}
+                <Link
+                  href="/signup"
+                  className="font-bold text-cyan-300 hover:text-cyan-200"
+                >
+                  Register Account
+                </Link>
+              </p>
+            </form>
+          </section>
+        </div>
+      </main>
+      {showRegistrationNotice && (
+        <div
+          className="fixed inset-0 z-[100] grid place-items-center bg-[#020817]/75 p-4 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="registration-notice-title"
+        >
+          <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0b1423] text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+            <div className="h-1 bg-gradient-to-r from-sky-500 via-cyan-300 to-amber-300" />
+            <div className="relative h-36 overflow-hidden bg-[#07111f] sm:h-40">
+              <img
+                src="/whatsapp-registration-banner.png"
+                alt="Trading charts and WhatsApp registration"
+                className="size-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b1423]/70 via-transparent to-[#07111f]/10" />
+            </div>
+            <div className="p-5 pt-4 sm:p-6">
+              <p className="text-xs font-semibold tracking-[.16em] !text-sky-300 uppercase">
+                Student registration
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowRegistrationNotice(false)}
+                aria-label="Close registration information"
+                className="absolute top-4 right-4 grid size-9 place-items-center rounded-lg border border-white/10 bg-white/[.04] text-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
+              >
+                ×
+              </button>
+              <h2
+                id="registration-notice-title"
+                className="mt-2 pr-10 text-2xl font-semibold !text-white"
+              >
+                Register with WhatsApp
+              </h2>
+              <p className="mt-3 text-sm leading-6 !text-slate-300">
+                To register, simply send us a message on WhatsApp.
+              </p>
+              <div className="mt-4 space-y-2">
+                <a
+                  href="https://wa.me/94741010446"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 transition hover:border-sky-300/30 hover:bg-sky-300/[.07]"
+                >
+                  <span>
+                    <span className="block text-[11px] font-medium tracking-wider !text-slate-400 uppercase">
+                      WhatsApp contact
+                    </span>
+                    <span className="mt-1 block text-base font-semibold !text-white">
+                      0741010446
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="grid size-9 place-items-center rounded-lg bg-sky-400 text-sm font-bold text-[#07111f] transition group-hover:bg-sky-300"
+                  >
+                    ↗
+                  </span>
+                </a>
+                <a
+                  href="https://wa.me/94711525225"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 transition hover:border-sky-300/30 hover:bg-sky-300/[.07]"
+                >
+                  <span>
+                    <span className="block text-[11px] font-medium tracking-wider !text-slate-400 uppercase">
+                      WhatsApp contact
+                    </span>
+                    <span className="mt-1 block text-base font-semibold !text-white">
+                      0711525225
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="grid size-9 place-items-center rounded-lg bg-sky-400 text-sm font-bold text-[#07111f] transition group-hover:bg-sky-300"
+                  >
+                    ↗
+                  </span>
+                </a>
+              </div>
+              <p className="mt-5 border-t border-white/[.08] pt-4 text-xs leading-5 !text-slate-400">
+                Select a number to start a WhatsApp conversation.
+              </p>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
+  );
 }
