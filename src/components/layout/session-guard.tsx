@@ -38,6 +38,8 @@ export default function SessionGuard() {
         const supabase = createClient();
         const userResult = await supabase.auth.getUser();
 
+        if (!userResult.data.user) return;
+
         if (userResult.data.user?.user_metadata?.must_change_password) {
           window.location.replace('/change-password');
           return;
