@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showRegistrationNotice, setShowRegistrationNotice] = useState(true);
 
   async function login(event: FormEvent) {
     event.preventDefault();
@@ -239,95 +238,6 @@ export default function LoginPage() {
           </section>
         </div>
       </main>
-      {showRegistrationNotice && (
-        <div
-          className="fixed inset-0 z-[100] grid place-items-center bg-[#020817]/75 p-4 backdrop-blur-md"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="registration-notice-title"
-        >
-          <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0b1423] text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
-            <div className="h-1 bg-gradient-to-r from-sky-500 via-cyan-300 to-amber-300" />
-            <div className="relative h-36 overflow-hidden bg-[#07111f] sm:h-40">
-              <img
-                src="/whatsapp-registration-banner.png"
-                alt="Trading charts and WhatsApp registration"
-                className="size-full object-cover object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0b1423]/70 via-transparent to-[#07111f]/10" />
-            </div>
-            <div className="p-5 pt-4 sm:p-6">
-              <p className="text-xs font-semibold tracking-[.16em] !text-sky-300 uppercase">
-                Student registration
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowRegistrationNotice(false)}
-                aria-label="Close registration information"
-                className="absolute top-4 right-4 grid size-9 place-items-center rounded-lg border border-sky-300 bg-sky-400 text-lg text-white transition hover:bg-sky-500"
-              >
-                ×
-              </button>
-              <h2
-                id="registration-notice-title"
-                className="mt-2 pr-10 text-2xl font-semibold !text-white"
-              >
-                Register with WhatsApp
-              </h2>
-              <p className="mt-3 text-sm leading-6 !text-slate-300">
-                To register, simply send us a message on WhatsApp.
-              </p>
-              <div className="mt-4 space-y-2">
-                <a
-                  href="https://wa.me/94741010446"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 transition hover:border-sky-300/30 hover:bg-sky-300/[.07]"
-                >
-                  <span>
-                    <span className="block text-[11px] font-medium tracking-wider !text-slate-400 uppercase">
-                      WhatsApp contact
-                    </span>
-                    <span className="mt-1 block text-base font-semibold !text-white">
-                      0741010446
-                    </span>
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="grid size-9 place-items-center rounded-lg bg-sky-400 text-sm font-bold text-[#07111f] transition group-hover:bg-sky-300"
-                  >
-                    ↗
-                  </span>
-                </a>
-                <a
-                  href="https://wa.me/94711525225"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 transition hover:border-sky-300/30 hover:bg-sky-300/[.07]"
-                >
-                  <span>
-                    <span className="block text-[11px] font-medium tracking-wider !text-slate-400 uppercase">
-                      WhatsApp contact
-                    </span>
-                    <span className="mt-1 block text-base font-semibold !text-white">
-                      0711525225
-                    </span>
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className="grid size-9 place-items-center rounded-lg bg-sky-400 text-sm font-bold text-[#07111f] transition group-hover:bg-sky-300"
-                  >
-                    ↗
-                  </span>
-                </a>
-              </div>
-              <p className="mt-5 border-t border-white/[.08] pt-4 text-xs leading-5 !text-slate-400">
-                Select a number to start a WhatsApp conversation.
-              </p>
-            </div>
-          </section>
-        </div>
-      )}
     </>
   );
 }
